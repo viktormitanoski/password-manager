@@ -1,0 +1,44 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(to right, #e0f7fa, #fff);
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+  }
+  
+  .card {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  }
+  
+  input.form-control {
+    border-radius: 8px;
+    padding: 10px;
+    transition: all 0.2s ease-in-out;
+  }
+  
+  input.form-control:focus {
+    border-color: #00acc1;
+    box-shadow: 0 0 8px rgba(0, 172, 193, 0.3);
+  }
+  
+  button.btn-primary, button.btn-success, button.btn-outline-danger {
+    border-radius: 25px;
+    font-weight: 500;
+  }
+  
+  h2, h3 {
+    font-weight: 600;
+    color: #00796b;
+  }
+  
+  a {
+    color: #00796b;
+    text-decoration: none;
+  }
+  
+  a:hover {
+    text-decoration: underline;
+  }
+  
