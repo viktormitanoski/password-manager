@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import { PasswordEntry } from "../types";
 import { clearAuthData } from "../auth";
+import { QRCodeCanvas } from "qrcode.react";
 
 export default function Dashboard() {
   const [form, setForm] = useState<PasswordEntry>({
@@ -13,6 +14,8 @@ export default function Dashboard() {
 
   const [entries, setEntries] = useState<PasswordEntry[]>([]);
   const [editId, setEditId] = useState<number | null>(null);
+  const [showQR, setShowQR] = useState<PasswordEntry | null>(null);
+  const [includeEmail, setIncludeEmail] = useState(false);
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -34,11 +37,9 @@ export default function Dashboard() {
     e.preventDefault();
     try {
       if (editId !== null) {
-        // Update existing entry
         await API.put(`/password-entries/${editId}`, form);
         setEditId(null);
       } else {
-        // Create new entry
         await API.post("/password-entries", form);
       }
       setForm({ siteName: "", siteEmail: "", sitePassword: "" });
@@ -152,10 +153,19 @@ export default function Dashboard() {
                       Edit
                     </button>
                     <button
-                      className="btn btn-sm btn-outline-danger"
+                      className="btn btn-sm btn-outline-danger me-2"
                       onClick={() => handleDelete(entry.id)}
                     >
                       Delete
+                    </button>
+                    <button
+                      className="btn btn-sm btn-outline-success"
+                      onClick={() => {
+                        setShowQR(entry);
+                        setIncludeEmail(false);
+                      }}
+                    >
+                      QR Code
                     </button>
                   </td>
                 </tr>
@@ -164,6 +174,48 @@ export default function Dashboard() {
           </table>
         )}
       </div>
+
+      {showQR && (
+        <div
+          className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center bg-dark bg-opacity-50"
+          onClick={() => setShowQR(null)}
+        >
+          <div
+            className="bg-white p-4 rounded"
+            onClick={(e) => e.stopPropagation()}
+            style={{ width: "fit-content", maxWidth: "90%" }}
+          >
+            <h5 className="mb-3 text-center">QR Code for {showQR.siteName}</h5>
+            <div className="text-center mb-3">
+              <QRCodeCanvas
+                value={
+                  includeEmail
+                    ? `${showQR.siteEmail} | ${showQR.sitePassword}`
+                    : showQR.sitePassword
+                }
+                size={180}
+              />
+            </div>
+            <div className="form-check mb-3 text-center">
+              <input
+                type="checkbox"
+                className="form-check-input"
+                checked={includeEmail}
+                onChange={(e) => setIncludeEmail(e.target.checked)}
+                id="toggleEmail"
+              />
+              <label className="form-check-label" htmlFor="toggleEmail">
+                Include Email
+              </label>
+            </div>
+            <div className="text-center">
+              <button className="btn btn-secondary" onClick={() => setShowQR(null)}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

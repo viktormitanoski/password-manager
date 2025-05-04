@@ -6,10 +6,12 @@ import { User } from "../types";
 
 export default function Login() {
   const [user, setUser] = useState<User>({ email: "", password: "" });
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
     try {
       const res = await axios.post("http://localhost:8080/users/login", user);
       const { token, vaultKey } = res.data;
@@ -18,6 +20,8 @@ export default function Login() {
     } catch (err: any) {
       console.error(err);
       alert(err.response?.data || "An error occurred during login.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -48,7 +52,24 @@ export default function Login() {
               placeholder="Enter your password"
             />
           </div>
-          <button type="submit" className="btn btn-primary w-100 mb-2">Login</button>
+          <button
+            type="submit"
+            className="btn btn-primary w-100 mb-2"
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <span
+                  className="spinner-border spinner-border-sm me-2"
+                  role="status"
+                  aria-hidden="true"
+                ></span>
+                Logging in...
+              </>
+            ) : (
+              "Login"
+            )}
+          </button>
         </form>
         <div className="text-center mt-2">
           <small>

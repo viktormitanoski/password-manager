@@ -52,3 +52,6 @@ export default tseslint.config({
   },
 })
 ```
+for frontend 
+npm install qrcode.react
+
