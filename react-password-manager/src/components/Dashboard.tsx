@@ -33,6 +33,17 @@ export default function Dashboard() {
     }
   };
 
+  const getDecryptedPassword = async (id: number): Promise<string> => {
+    try {
+      const res = await API.get(`/password-entries/${id}`);
+      console.log(res.data)
+      return res.data.sitePassword;
+    } catch (err) {
+      alert("Failed to retrieve password.");
+      return "";
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -52,9 +63,9 @@ export default function Dashboard() {
   const handleEdit = (entry: PasswordEntry) => {
     setEditId(entry.id!);
     setForm({
-      siteName: entry.siteName,
-      siteEmail: entry.siteEmail,
-      sitePassword: entry.sitePassword,
+      siteName: "",
+      siteEmail: "",
+      sitePassword: "",
     });
   };
 
@@ -144,13 +155,15 @@ export default function Dashboard() {
                   <td>{entry.siteName}</td>
                   <td>{entry.siteEmail}</td>
                   <td>
-                    <span className="me-2">••••••</span>
                     <button
                       className="btn btn-sm btn-outline-secondary"
                       title="Copy Password"
-                      onClick={() => {
-                        navigator.clipboard.writeText(entry.sitePassword);
-                        alert("Password copied to clipboard!");
+                      onClick={async () => {
+                        const decrypted = await getDecryptedPassword(entry.id!);
+                        if (decrypted) {
+                          await navigator.clipboard.writeText(decrypted);
+                          alert("Password copied to clipboard!");
+                        }
                       }}
                     >
                       📋

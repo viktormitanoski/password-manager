@@ -50,8 +50,6 @@ public class PasswordEntryService {
         List<PasswordEntry> entries = passwordEntryDAO.findByUserEmail(userEmail);
         return entries.stream().map(entry -> {
             try {
-                String decrypted = VaultCryptoUtil.decrypt(entry.getSitePassword(), vaultKey);
-                entry.setSitePassword(decrypted);
                 return entry;
             } catch (Exception e) {
                 // handle decryption error (return null, skip, or custom logic)
