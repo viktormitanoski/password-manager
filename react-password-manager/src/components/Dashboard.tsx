@@ -143,7 +143,19 @@ export default function Dashboard() {
                 <tr key={entry.id}>
                   <td>{entry.siteName}</td>
                   <td>{entry.siteEmail}</td>
-                  <td>{entry.sitePassword}</td>
+                  <td>
+                    <span className="me-2">••••••</span>
+                    <button
+                      className="btn btn-sm btn-outline-secondary"
+                      title="Copy Password"
+                      onClick={() => {
+                        navigator.clipboard.writeText(entry.sitePassword);
+                        alert("Password copied to clipboard!");
+                      }}
+                    >
+                      📋
+                    </button>
+                  </td>
                   <td>{new Date(entry.createdAt || "").toLocaleString()}</td>
                   <td>
                     <button
