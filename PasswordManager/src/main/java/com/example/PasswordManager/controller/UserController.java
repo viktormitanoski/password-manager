@@ -52,7 +52,7 @@ public class UserController {
             if (existingUser.isPresent()) {
                 boolean matches = passwordEncoder.matches(user.getPassword(), existingUser.get().getPassword());
                 if (matches) {
-                    String storedSalt = existingUser.get().getSalt();  // ✅ use stored value
+                    String storedSalt = existingUser.get().getSalt();
                     byte[] vaultKey = VaultKeyUtil.deriveKey(user.getPassword(), storedSalt);
                     String base64VaultKey = Base64.getEncoder().encodeToString(vaultKey);
                     String token = jwtUtil.generateToken(user.getEmail());

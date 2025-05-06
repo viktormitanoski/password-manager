@@ -9,6 +9,7 @@ export default function Signup() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [showGenerator, setShowGenerator] = useState(false);
+  const [loading, setLoading] = useState(false); // ← Add loading state
 
   const isPasswordSecure = (password: string): boolean => {
     const hasMinLength = password.length >= 8;
@@ -26,6 +27,7 @@ export default function Signup() {
       return;
     }
 
+    setLoading(true);
     try {
       await axios.post("http://localhost:8080/users/register", user);
       setSuccess("User registered successfully!");
@@ -35,6 +37,8 @@ export default function Signup() {
     } catch (err: any) {
       setError(err.response?.data || "Registration failed.");
       setSuccess(null);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -46,11 +50,11 @@ export default function Signup() {
   return (
     <div className="container d-flex justify-content-center align-items-center vh-100">
       <Link
-              to="/"
-              className="position-absolute top-0 start-0 mt-3 ms-3 text-decoration-none text-muted"
-            >
-              &larr; Back to Home
-            </Link>
+        to="/"
+        className="position-absolute top-0 start-0 mt-3 ms-3 text-decoration-none text-muted"
+      >
+        &larr; Back to Home
+      </Link>
       <div className="card p-4" style={{ width: "100%", maxWidth: "420px" }}>
         <h3 className="text-center mb-4">Create Account</h3>
 
@@ -72,7 +76,7 @@ export default function Signup() {
           <div className="form-group mb-2">
             <label>Password</label>
             <input
-              type="text"
+              type="password"
               className="form-control"
               value={user.password}
               onChange={(e) => setUser({ ...user, password: e.target.value })}
@@ -100,7 +104,24 @@ export default function Signup() {
             </div>
           )}
 
-          <button type="submit" className="btn btn-success w-100 mb-2">Register</button>
+          <button
+            type="submit"
+            className="btn btn-success w-100 mb-2"
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <span
+                  className="spinner-border spinner-border-sm me-2"
+                  role="status"
+                  aria-hidden="true"
+                ></span>
+                Registering...
+              </>
+            ) : (
+              "Register"
+            )}
+          </button>
         </form>
 
         <div className="text-center mt-2">

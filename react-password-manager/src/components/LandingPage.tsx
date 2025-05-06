@@ -60,9 +60,7 @@ export default function LandingPage() {
             <div className="col-md-6 text-md-start text-center">
               <h2 className="h4 fw-bold">Encryption & Security</h2>
               <p>
-                Passwords are encrypted using AES (Advanced Encryption Standard) and a unique
-                vault key that never leaves your browser. The server never stores your master
-                decryption key, making your data secure by design.
+                Passwords are encrypted using AES (Advanced Encryption Standard).
               </p>
               <p>
                 JWT tokens are used to authenticate requests, expire automatically, and protect
