@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import API from "../services/api";
+import API, { setAuthHeaders } from "../services/api";
 import { PasswordEntry } from "../types";
-import { clearAuthData } from "../auth";
+import { useAuth } from "../auth";
 import { QRCodeCanvas } from "qrcode.react";
+import PasswordGenerator from "./PasswordGenerator"; 
 
 export default function Dashboard() {
   const [form, setForm] = useState<PasswordEntry>({
@@ -16,6 +17,8 @@ export default function Dashboard() {
   const [editId, setEditId] = useState<number | null>(null);
   const [showQR, setShowQR] = useState<PasswordEntry | null>(null);
   const [includeEmail, setIncludeEmail] = useState(false);
+  const [showGenerator, setShowGenerator] = useState(false); 
+  const { token, vaultKey, clearAuthData } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -36,7 +39,6 @@ export default function Dashboard() {
   const getDecryptedPassword = async (id: number): Promise<string> => {
     try {
       const res = await API.get(`/password-entries/${id}`);
-      console.log(res.data)
       return res.data.sitePassword;
     } catch (err) {
       alert("Failed to retrieve password.");
@@ -63,8 +65,8 @@ export default function Dashboard() {
   const handleEdit = (entry: PasswordEntry) => {
     setEditId(entry.id!);
     setForm({
-      siteName: "",
-      siteEmail: "",
+      siteName: entry.siteName,
+      siteEmail: entry.siteEmail,
       sitePassword: "",
     });
   };
@@ -83,14 +85,22 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    fetchEntries();
-  }, []);
+    if (token && vaultKey) {
+      setAuthHeaders(token, vaultKey);
+      fetchEntries();
+    }
+  }, [token, vaultKey]);
+
+  const handleUseGeneratedPassword = (generated: string) => {
+    setForm((prev) => ({ ...prev, sitePassword: generated }));
+    setShowGenerator(false);
+  };
 
   return (
     <div className="container my-5">
       <div className="card p-4">
         <div className="d-flex justify-content-between align-items-center mb-4">
-          <h2>🛡️ Your Vault</h2>
+          <h2>Your Vault</h2>
           <button className="btn btn-outline-danger" onClick={handleLogout}>
             Logout
           </button>
@@ -129,6 +139,23 @@ export default function Dashboard() {
               />
             </div>
           </div>
+
+          <div className="text-end mb-3">
+            <button
+              type="button"
+              className="btn btn-outline-primary btn-sm"
+              onClick={() => setShowGenerator(!showGenerator)}
+            >
+              {showGenerator ? "Hide Generator" : "Generate Password"}
+            </button>
+          </div>
+
+          {showGenerator && (
+            <div className="mb-4">
+              <PasswordGenerator onUsePassword={handleUseGeneratedPassword} />
+            </div>
+          )}
+
           <button className="btn btn-primary w-100">
             {editId !== null ? "Update Entry" : "Save Password"}
           </button>
@@ -155,6 +182,7 @@ export default function Dashboard() {
                   <td>{entry.siteName}</td>
                   <td>{entry.siteEmail}</td>
                   <td>
+                    ••••••••&nbsp;
                     <button
                       className="btn btn-sm btn-outline-secondary"
                       title="Copy Password"
@@ -166,7 +194,7 @@ export default function Dashboard() {
                         }
                       }}
                     >
-                      📋
+                      Copy
                     </button>
                   </td>
                   <td>{new Date(entry.createdAt || "").toLocaleString()}</td>

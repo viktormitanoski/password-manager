@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import axios from "axios";
 import { User } from "../types";
 import { Link } from "react-router-dom";
+import PasswordGenerator from "./PasswordGenerator";
 
 export default function Signup() {
   const [user, setUser] = useState<User>({ email: "", password: "" });
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [showGenerator, setShowGenerator] = useState(false);
 
   const isPasswordSecure = (password: string): boolean => {
     const hasMinLength = password.length >= 8;
@@ -29,16 +31,28 @@ export default function Signup() {
       setSuccess("User registered successfully!");
       setError(null);
       setUser({ email: "", password: "" });
+      setShowGenerator(false);
     } catch (err: any) {
       setError(err.response?.data || "Registration failed.");
       setSuccess(null);
     }
   };
 
+  const handleUseGeneratedPassword = (generatedPassword: string) => {
+    setUser({ ...user, password: generatedPassword });
+    setShowGenerator(false);
+  };
+
   return (
     <div className="container d-flex justify-content-center align-items-center vh-100">
+      <Link
+              to="/"
+              className="position-absolute top-0 start-0 mt-3 ms-3 text-decoration-none text-muted"
+            >
+              &larr; Back to Home
+            </Link>
       <div className="card p-4" style={{ width: "100%", maxWidth: "420px" }}>
-        <h3 className="text-center mb-4">📝 Create Account</h3>
+        <h3 className="text-center mb-4">Create Account</h3>
 
         {error && <div className="alert alert-danger">{error}</div>}
         {success && <div className="alert alert-success">{success}</div>}
@@ -55,26 +69,43 @@ export default function Signup() {
               placeholder="Enter your email"
             />
           </div>
-          <div className="form-group mb-4">
+          <div className="form-group mb-2">
             <label>Password</label>
             <input
-              type="password"
+              type="text"
               className="form-control"
               value={user.password}
               onChange={(e) => setUser({ ...user, password: e.target.value })}
               required
-              placeholder="Create a secure password"
+              placeholder="Enter a secure password"
             />
             <small className="form-text text-muted">
               Must be 8+ characters with at least 1 number and 1 special character
             </small>
           </div>
+
+          <div className="mb-3 text-center">
+            <button
+              type="button"
+              className="btn btn-outline-primary btn-sm"
+              onClick={() => setShowGenerator(!showGenerator)}
+            >
+              {showGenerator ? "Hide Generator" : "Generate a strong password"}
+            </button>
+          </div>
+
+          {showGenerator && (
+            <div className="mb-3">
+              <PasswordGenerator onUsePassword={handleUseGeneratedPassword} />
+            </div>
+          )}
+
           <button type="submit" className="btn btn-success w-100 mb-2">Register</button>
         </form>
 
         <div className="text-center mt-2">
           <small>
-            Already registered? <Link to="/">Login here</Link>
+            Already registered? <Link to="/login">Login here</Link>
           </small>
         </div>
       </div>

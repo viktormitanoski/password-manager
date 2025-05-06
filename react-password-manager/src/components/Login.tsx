@@ -1,12 +1,14 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
-import { setAuthData } from "../auth";
+import { useAuth } from "../auth";
+import { setAuthHeaders } from "../services/api";
 import { User } from "../types";
 
 export default function Login() {
   const [user, setUser] = useState<User>({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
+  const { setAuthData } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -16,6 +18,7 @@ export default function Login() {
       const res = await axios.post("http://localhost:8080/users/login", user);
       const { token, vaultKey } = res.data;
       setAuthData(token, vaultKey);
+      setAuthHeaders(token, vaultKey);
       navigate("/dashboard");
     } catch (err: any) {
       console.error(err);
@@ -27,8 +30,14 @@ export default function Login() {
 
   return (
     <div className="container d-flex justify-content-center align-items-center vh-100">
+      <Link
+        to="/"
+        className="position-absolute top-0 start-0 mt-3 ms-3 text-decoration-none text-muted"
+      >
+        &larr; Back to Home
+      </Link>
       <div className="card p-4" style={{ width: "100%", maxWidth: "420px" }}>
-        <h3 className="text-center mb-4">🔐 Welcome Back</h3>
+        <h3 className="text-center mb-4">Welcome Back</h3>
         <form onSubmit={handleSubmit}>
           <div className="form-group mb-3">
             <label>Email address</label>
@@ -54,7 +63,7 @@ export default function Login() {
           </div>
           <button
             type="submit"
-            className="btn btn-primary w-100 mb-2"
+            className="btn btn-success w-100 mb-2"
             disabled={loading}
           >
             {loading ? (
