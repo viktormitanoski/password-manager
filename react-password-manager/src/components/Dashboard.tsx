@@ -4,7 +4,7 @@ import API, { setAuthHeaders } from "../services/api";
 import { PasswordEntry } from "../types";
 import { useAuth } from "../auth";
 import { QRCodeCanvas } from "qrcode.react";
-import PasswordGenerator from "./PasswordGenerator"; 
+import PasswordGenerator from "./PasswordGenerator";
 
 export default function Dashboard() {
   const [form, setForm] = useState<PasswordEntry>({
@@ -17,7 +17,7 @@ export default function Dashboard() {
   const [editId, setEditId] = useState<number | null>(null);
   const [showQR, setShowQR] = useState<PasswordEntry | null>(null);
   const [includeEmail, setIncludeEmail] = useState(false);
-  const [showGenerator, setShowGenerator] = useState(false); 
+  const [showGenerator, setShowGenerator] = useState(false);
   const { token, vaultKey, clearAuthData } = useAuth();
   const navigate = useNavigate();
 
@@ -213,9 +213,12 @@ export default function Dashboard() {
                     </button>
                     <button
                       className="btn btn-sm btn-outline-success"
-                      onClick={() => {
-                        setShowQR(entry);
-                        setIncludeEmail(false);
+                      onClick={async () => {
+                        const decrypted = await getDecryptedPassword(entry.id!);
+                        if (decrypted) {
+                          setShowQR({ ...entry, sitePassword: decrypted });
+                          setIncludeEmail(false);
+                        }
                       }}
                     >
                       QR Code
