@@ -18,6 +18,10 @@ export default function Dashboard() {
   const [showQR, setShowQR] = useState<PasswordEntry | null>(null);
   const [includeEmail, setIncludeEmail] = useState(false);
   const [showGenerator, setShowGenerator] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [masterPassword, setMasterPassword] = useState("");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [pendingAction, setPendingAction] = useState<(() => Promise<void>) | null>(null);
   const { token, vaultKey, clearAuthData } = useAuth();
   const navigate = useNavigate();
 
@@ -90,6 +94,49 @@ export default function Dashboard() {
       fetchEntries();
     }
   }, [token, vaultKey]);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (isAuthenticated) {
+      timer = setTimeout(() => {
+        setIsAuthenticated(false);
+        setMasterPassword("");
+      }, 30 * 1000); // 30 seconds
+    }
+    return () => clearTimeout(timer);
+  }, [isAuthenticated]);
+
+  const verifyMasterPassword = async () => {
+    try {
+      const res = await API.post("/users/verify-password", { password: masterPassword });
+      if (res.data.valid) {
+        setIsAuthenticated(true);
+        setMasterPassword("");
+        setShowPasswordModal(false);
+        if (pendingAction) {
+          await pendingAction();
+          setPendingAction(null);
+        }
+      } else {
+        alert("Incorrect master password.");
+      }
+    } catch (err) {
+      alert("Failed to verify master password.");
+    }
+  };
+
+  const promptForMasterPassword = (action: () => Promise<void>) => {
+    setPendingAction(() => action);
+    setShowPasswordModal(true);
+  };
+
+  const handleSensitiveAction = (action: () => Promise<void>) => {
+    if (isAuthenticated) {
+      action();
+    } else {
+      promptForMasterPassword(action);
+    }
+  };
 
   const handleUseGeneratedPassword = (generated: string) => {
     setForm((prev) => ({ ...prev, sitePassword: generated }));
@@ -182,17 +229,19 @@ export default function Dashboard() {
                   <td>{entry.siteName}</td>
                   <td>{entry.siteEmail}</td>
                   <td>
-                    ••••••••&nbsp;
+                    ••••••••
                     <button
                       className="btn btn-sm btn-outline-secondary"
                       title="Copy Password"
-                      onClick={async () => {
-                        const decrypted = await getDecryptedPassword(entry.id!);
-                        if (decrypted) {
-                          await navigator.clipboard.writeText(decrypted);
-                          alert("Password copied to clipboard!");
-                        }
-                      }}
+                      onClick={() =>
+                        handleSensitiveAction(async () => {
+                          const decrypted = await getDecryptedPassword(entry.id!);
+                          if (decrypted) {
+                            await navigator.clipboard.writeText(decrypted);
+                            alert("Password copied to clipboard!");
+                          }
+                        })
+                      }
                     >
                       Copy
                     </button>
@@ -201,25 +250,35 @@ export default function Dashboard() {
                   <td>
                     <button
                       className="btn btn-sm btn-outline-primary me-2"
-                      onClick={() => handleEdit(entry)}
+                      onClick={() =>
+                        handleSensitiveAction(async () => {
+                          handleEdit(entry);
+                        })
+                      }
                     >
                       Edit
                     </button>
                     <button
                       className="btn btn-sm btn-outline-danger me-2"
-                      onClick={() => handleDelete(entry.id)}
+                      onClick={() =>
+                        handleSensitiveAction(async () => {
+                          await handleDelete(entry.id);
+                        })
+                      }
                     >
                       Delete
                     </button>
                     <button
                       className="btn btn-sm btn-outline-success"
-                      onClick={async () => {
-                        const decrypted = await getDecryptedPassword(entry.id!);
-                        if (decrypted) {
-                          setShowQR({ ...entry, sitePassword: decrypted });
-                          setIncludeEmail(false);
-                        }
-                      }}
+                      onClick={() =>
+                        handleSensitiveAction(async () => {
+                          const decrypted = await getDecryptedPassword(entry.id!);
+                          if (decrypted) {
+                            setShowQR({ ...entry, sitePassword: decrypted });
+                            setIncludeEmail(false);
+                          }
+                        })
+                      }
                     >
                       QR Code
                     </button>
@@ -267,6 +326,47 @@ export default function Dashboard() {
             <div className="text-center">
               <button className="btn btn-secondary" onClick={() => setShowQR(null)}>
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showPasswordModal && (
+        <div
+          className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center bg-dark bg-opacity-50"
+        >
+          <div
+            className="bg-white p-4 rounded"
+            style={{ width: "fit-content", maxWidth: "400px" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h5 className="mb-3 text-center">Enter Master Password</h5>
+            <input
+              type="password"
+              className="form-control mb-3"
+              value={masterPassword}
+              onChange={(e) => setMasterPassword(e.target.value)}
+              placeholder="Master Password"
+              autoFocus
+            />
+            <div className="d-flex justify-content-between">
+              <button
+                className="btn btn-secondary"
+                onClick={() => {
+                  setShowPasswordModal(false);
+                  setMasterPassword("");
+                  setPendingAction(null);
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-primary"
+                onClick={verifyMasterPassword}
+                disabled={!masterPassword}
+              >
+                Submit
               </button>
             </div>
           </div>

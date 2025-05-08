@@ -64,7 +64,7 @@ export default function LandingPage() {
               </p>
               <p>
                 JWT tokens are used to authenticate requests, expire automatically, and protect
-                user sessions. Vault keys are kept in-memory only.
+                user sessions.
               </p>
             </div>
           </div>

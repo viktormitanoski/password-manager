@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -67,6 +68,31 @@ public class UserController {
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred during login.");
+        }
+    }
+
+    // Verify master password
+    @PostMapping("/verify-password")
+    public ResponseEntity<?> verifyPassword(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody Map<String, String> body) {
+        try {
+            String email = jwtUtil.extractEmail(authHeader);
+            String password = body.get("password");
+            if (password == null || password.isEmpty()) {
+                return ResponseEntity.badRequest().body("Password is required.");
+            }
+            Optional<User> user = userService.getUserByEmail(email);
+            if (user.isPresent()) {
+                boolean matches = passwordEncoder.matches(password, user.get().getPassword());
+                return ResponseEntity.ok(Map.of("valid", matches));
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found.");
+            }
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to verify password.");
         }
     }
 
